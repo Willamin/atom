@@ -143,7 +143,7 @@ class TextEditor extends Model
     super
 
     {
-      @softTabs, @firstVisibleScreenRow, @firstVisibleScreenColumn, initialLine, initialColumn, tabLength,
+      @softTabs, @initialFirstVisibleRow, @initialFirstVisibleColumn, initialLine, initialColumn, tabLength,
       @softWrapped, @decorationManager, @selectionsMarkerLayer, @buffer, suppressCursorCreation,
       @mini, @placeholderText, lineNumberGutterVisible, @largeFileMode,
       @assert, grammar, @showInvisibles, @autoHeight, @autoWidth, @scrollPastEnd, @editorWidthInChars,
@@ -153,8 +153,6 @@ class TextEditor extends Model
     } = params
 
     @assert ?= (condition) -> condition
-    @firstVisibleScreenRow ?= 0
-    @firstVisibleScreenColumn ?= 0
     @emitter = new Emitter
     @disposables = new CompositeDisposable
     @cursors = []
@@ -415,8 +413,8 @@ class TextEditor extends Model
       displayLayerId: @displayLayer.id
       selectionsMarkerLayerId: @selectionsMarkerLayer.id
 
-      firstVisibleScreenRow: @getFirstVisibleScreenRow()
-      firstVisibleScreenColumn: @getFirstVisibleScreenColumn()
+      initialFirstVisibleRow: @getFirstVisibleScreenRow()
+      initialFirstVisibleColumn: @getFirstVisibleScreenColumn()
 
       atomicSoftTabs: @displayLayer.atomicSoftTabs
       softWrapHangingIndentLength: @displayLayer.softWrapHangingIndent
@@ -766,7 +764,8 @@ class TextEditor extends Model
       @buffer, selectionsMarkerLayer, softTabs,
       suppressCursorCreation: true,
       tabLength: @tokenizedBuffer.getTabLength(),
-      @firstVisibleScreenRow, @firstVisibleScreenColumn,
+      initialFirstVisibleRow: @getFirstVisibleScreenRow(),
+      initialFirstVisibleColumn: @getFirstVisibleScreenColumn(),
       @assert, displayLayer, grammar: @getGrammar(),
       @autoWidth, @autoHeight, @showCursorOnSelection
     })
@@ -3585,7 +3584,8 @@ class TextEditor extends Model
       TextEditorElement ?= require('./text-editor-element')
       new TextEditorComponent({
         model: this,
-        updatedSynchronously: TextEditorElement.prototype.updatedSynchronously
+        updatedSynchronously: TextEditorElement.prototype.updatedSynchronously,
+        @initialFirstVisibleRow, @initialFirstVisibleColumn
       })
       @component.element
 

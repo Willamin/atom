@@ -118,6 +118,8 @@ class TextEditorComponent {
       highlights: new Map(),
       cursors: []
     }
+    this.pendingInitialFirstVisibleRow = this.props.initialFirstVisibleRow
+    this.pendingInitialFirstVisibleColumn = this.props.initialFirstVisibleColumn
 
     this.measuredContent = false
     this.gutterContainerVnode = null
@@ -1241,6 +1243,7 @@ class TextEditorComponent {
       if (!this.measurements) this.performInitialMeasurements()
       this.props.model.setVisible(true)
       this.updateSync()
+      this.flushPendingLogicalScrollPosition()
     }
   }
 
@@ -1708,6 +1711,22 @@ class TextEditorComponent {
   didRequestAutoscroll (autoscroll) {
     this.pendingAutoscroll = autoscroll
     this.scheduleUpdate()
+  }
+
+  flushPendingLogicalScrollPosition () {
+    let changedScrollTop = false
+    if (this.pendingInitialFirstVisibleRow > 0) {
+      changedScrollTop = this.setFirstVisibleRow(this.pendingInitialFirstVisibleRow)
+      this.pendingInitialFirstVisibleRow = null
+    }
+
+    let changedScrollLeft = false
+    if (this.pendingInitialFirstVisibleColumn > 0) {
+      changedScrollLeft = this.setFirstVisibleColumn(this.pendingInitialFirstVisibleColumn)
+      this.pendingInitialFirstVisibleColumn = null
+    }
+
+    if (changedScrollTop || changedScrollLeft) this.updateSync()
   }
 
   autoscrollVertically () {
@@ -2314,7 +2333,7 @@ class TextEditorComponent {
   }
 
   setFirstVisibleRow (row) {
-    this.setScrollTop(this.pixelPositionBeforeBlocksForRow(row))
+    return this.setScrollTop(this.pixelPositionBeforeBlocksForRow(row))
   }
 
   getFirstVisibleRow () {
@@ -2333,11 +2352,13 @@ class TextEditorComponent {
   }
 
   getFirstVisibleColumn () {
-    return Math.floor(this.getScrollLeft() / this.getBaseCharacterWidth())
+    if (this.measurements) {
+      return Math.floor(this.getScrollLeft() / this.getBaseCharacterWidth())
+    }
   }
 
   setFirstVisibleColumn (column) {
-    this.setScrollLeft(column * this.getBaseCharacterWidth())
+    return this.setScrollLeft(column * this.getBaseCharacterWidth())
   }
 
   getVisibleTileCount () {
